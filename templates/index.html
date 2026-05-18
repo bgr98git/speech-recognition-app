@@ -15,7 +15,7 @@
 body{
     margin:0;
     padding:0;
-    background:#dfbc7d;
+    background:#eedab5;
     font-family:Arial;
 }
 
@@ -140,8 +140,139 @@ button{
     </div>
 
 </div>
-
 <script>
+
+let recognition;
+let allText = "";
+let isListening = false;
+
+function startSpeech() {
+
+    // Browser Support
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+
+        alert(
+            "Speech Recognition not supported in this browser"
+        );
+
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+
+    recognition.continuous = true;
+
+    // Better for mobile
+    recognition.interimResults = true;
+
+    recognition.lang = "en-US";
+
+    recognition.maxAlternatives = 1;
+
+    isListening = true;
+
+    document.getElementById("mic-status")
+        .innerHTML = "🟢 Listening...";
+
+    document.getElementById("mic-status")
+        .style.color = "green";
+
+    document.getElementById("status")
+        .innerHTML = "Speak now...";
+
+    recognition.onresult = function(event) {
+
+        let finalText = "";
+
+        for (
+            let i = event.resultIndex;
+            i < event.results.length;
+            i++
+        ) {
+
+            finalText +=
+                event.results[i][0].transcript + " ";
+        }
+
+        allText += finalText;
+
+        document.getElementById("output")
+            .innerHTML = allText;
+
+        // Auto Scroll
+        document.getElementById("output-box")
+            .scrollTop =
+            document.getElementById("output-box")
+            .scrollHeight;
+    };
+
+    recognition.onerror = function(event) {
+
+        console.log(event.error);
+
+        document.getElementById("status")
+            .innerHTML =
+            "Error : " + event.error;
+    };
+
+    recognition.onend = function() {
+
+        // Restart only if user still wants listening
+        if (isListening) {
+
+            recognition.start();
+
+        } else {
+
+            document.getElementById("mic-status")
+                .innerHTML = "🔴 Mic OFF";
+
+            document.getElementById("mic-status")
+                .style.color = "red";
+
+            document.getElementById("status")
+                .innerHTML =
+                "Listening stopped";
+        }
+    };
+
+    recognition.start();
+}
+
+function stopSpeech() {
+
+    isListening = false;
+
+    if (recognition) {
+
+        recognition.stop();
+    }
+}
+
+function downloadText() {
+
+    let blob =
+        new Blob([allText],
+        { type: "text/plain" });
+
+    let a =
+        document.createElement("a");
+
+    a.href =
+        URL.createObjectURL(blob);
+
+    a.download =
+        "speech.txt";
+
+    a.click();
+}
+
+</script>
+<!-- <script>
 
 let recognition;
 let allText = "";
@@ -279,7 +410,7 @@ function downloadText(){
 
     a.click();
 }
-</script>
+</script> -->
 
 </body>
 </html>
