@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,
+      initial-scale=1.0">
+
+<title>Real-Time Speech Recognition</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:0;
+    background:#dfbc7d;
+    font-family:Arial;
+}
+
+.container{
+    text-align:center;
+    margin-top:40px;
+}
+
+h1{
+    font-size:45px;
+    font-weight:bold;
+}
+
+#mic-status{
+    font-size:35px;
+    color:red;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+#output-box{
+    width:65%;
+    height:320px;
+    background:white;
+    margin:40px auto;
+    border-radius:10px;
+    border:1px solid gray;
+    overflow-y:auto;
+    padding:20px;
+    text-align:left;
+}
+
+#output{
+    font-size:24px;
+    color:green;
+    line-height:1.8;
+    word-wrap:break-word;
+}
+
+#status{
+    color:blue;
+    font-size:22px;
+}
+
+.button-group{
+    margin-top:30px;
+}
+
+button{
+    border:none;
+    padding:18px 35px;
+    font-size:22px;
+    color:white;
+    font-weight:bold;
+    border-radius:8px;
+    cursor:pointer;
+    margin:10px;
+}
+
+#start-btn{
+    background:green;
+}
+
+#stop-btn{
+    background:red;
+}
+#down-btn
+{
+    background:rgb(75, 17, 235);
+}
+.error{
+    color:red;
+    margin-top:10px;
+    font-size:22px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>
+        🎤 Real-Time Speech Recognition
+    </h1>
+
+    <div id="mic-status">
+        🔴 Mic OFF
+    </div>
+
+    <div id="output-box">
+
+        <div id="output"></div>
+
+    </div>
+
+    <p id="status">
+        Click Start Button
+    </p>
+
+    <div class="button-group">
+
+        <button id="start-btn"
+                onclick="startSpeech()">
+
+            Start Listening
+
+        </button>
+
+        <button id="stop-btn"
+                onclick="stopSpeech()">
+
+            Stop Listening
+
+        </button>
+        <button id="down-btn" onclick="downloadText()">
+    Download
+</button>
+
+    </div>
+
+</div>
+
+<script>
+
+let recognition;
+let allText = "";
+
+// Start Speech Function
+function startSpeech() {
+
+    // Browser Support Check
+    if (!('webkitSpeechRecognition' in window)) {
+
+        alert(
+            "Speech Recognition not supported in this browser"
+        );
+
+        return;
+    }
+
+    recognition =
+        new webkitSpeechRecognition();
+
+    // Continuous Listening
+    recognition.continuous = true;
+
+    // Only Final Result
+    recognition.interimResults = false;
+
+    // Language
+    recognition.lang = "en-US";
+
+    // Better Accuracy
+    recognition.maxAlternatives = 1;
+
+    // Mic ON
+    document.getElementById("mic-status")
+        .innerHTML = "🟢 Listening...";
+
+    document.getElementById("mic-status")
+        .style.color = "green";
+
+    document.getElementById("status")
+        .innerHTML = "Speak now...";
+
+    // Speech Result
+    recognition.onresult = function(event) {
+
+        let currentText = "";
+
+        for(let i = event.resultIndex;
+            i < event.results.length;
+            i++) {
+
+            currentText +=
+                event.results[i][0]
+                .transcript + " ";
+        }
+
+        // Store complete speech
+        allText += currentText;
+
+        // Display all text continuously
+        document.getElementById("output")
+            .innerHTML = allText;
+
+        // Auto Scroll
+        document.getElementById("output-box")
+            .scrollTop =
+            document.getElementById("output-box")
+            .scrollHeight;
+    };
+
+    // Error Handling
+    recognition.onerror = function(event) {
+
+        document.getElementById("output")
+            .innerHTML +=
+            "<div class='error'>Could not understand audio</div>";
+    };
+
+    // Auto Restart Recognition
+    recognition.onend = function() {
+
+        document.getElementById("mic-status")
+            .innerHTML = "🔴 Mic OFF";
+
+        document.getElementById("mic-status")
+            .style.color = "red";
+
+        document.getElementById("status")
+            .innerHTML =
+            "Speech recognition stopped";
+
+        // Restart automatically
+        recognition.start();
+    };
+
+    // Start Recognition
+    recognition.start();
+}
+
+// Stop Function
+function stopSpeech() {
+
+    if(recognition){
+
+        recognition.onend = null;
+
+        recognition.stop();
+
+        document.getElementById("mic-status")
+            .innerHTML = "🔴 Mic OFF";
+
+        document.getElementById("mic-status")
+            .style.color = "red";
+
+        document.getElementById("status")
+            .innerHTML =
+            "Listening stopped";
+    }
+}
+//download button
+function downloadText(){
+
+    let blob =
+        new Blob([allText],
+        {type:"text/plain"});
+
+    let a =
+        document.createElement("a");
+
+    a.href =
+        URL.createObjectURL(blob);
+
+    a.download =
+        "speech.txt";
+
+    a.click();
+}
+</script>
+
+</body>
+</html>
